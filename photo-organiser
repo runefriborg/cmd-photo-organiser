@@ -1,0 +1,48 @@
+# rename any file with wrong filename to name with date info. Ask for confirmation.
+# Use path to check for possible errors
+# Only open folders with 20XX/20XX-YY format
+
+import os
+import re
+import time
+
+validPath1 = re.compile(r".*Photos/20[0-9]{2}/(20[0-9]{2})-([0-1][0-9])[^/]*$")
+
+dateForm = re.compile(r"20[0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{2}\.[0-9]{2}\.[0-9]{2}$")
+
+for dirpath, dirnames, filenames in  os.walk(os.getcwd()):
+    m = validPath1.match(dirpath)
+    if m:
+        year, month = m.groups()
+        year = int(year)
+        month = int(month)
+        for f in filenames:
+            if f[-4:].lower() == '.jpg' or f[-4:].lower() == '.mov' or f[-4:].lower() == '.mp4' or f[-4:].lower() == '.mts':
+                check = dateForm.match(f[:-4])
+                if not check:
+                    ctime = os.stat(os.path.join(dirpath,f)).st_ctime
+                    t = time.gmtime(ctime+(2*3600))
+                    if t.tm_year == year and t.tm_mon == month:
+                        #rename
+                        tm_year,tm_mon,tm_mday,tm_hour,tm_min,tm_sec = t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec
+                        if tm_mon < 10:
+                            tm_mon = "0"+str(tm_mon)
+                        if tm_mday < 10:
+                            tm_mday = "0"+str(tm_mday)
+                        if tm_min < 10:
+                            tm_min = "0"+str(tm_min)
+                        if tm_hour < 10:
+                            tm_hour = "0"+str(tm_hour)
+                        if tm_sec < 10:
+                            tm_sec = "0"+str(tm_sec)
+                        newname = str(tm_year)+"-"+str(tm_mon)+"-"+str(tm_mday)+" "+str(tm_hour)+"."+str(tm_min)+"."+str(tm_sec)+f[-4:]
+                        if newname != f:
+                            i = 1
+                            while(os.path.isfile(os.path.join(dirpath, newname))):
+                                newname = str(tm_year)+"-"+str(tm_mon)+"-"+str(tm_mday)+" "+str(tm_hour)+"."+str(tm_min)+"."+str(tm_sec)+str(i)+f[-4:]
+                                i+=1
+                            
+                            print("rename '"+os.path.join(dirpath, f)+"' '"+os.path.join(dirpath, newname)+"'")
+                            os.rename(os.path.join(dirpath, f), os.path.join(dirpath, newname))
+
+#  LocalWords:  isfile
